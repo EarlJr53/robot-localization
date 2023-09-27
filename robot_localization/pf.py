@@ -19,6 +19,7 @@ from occupancy_field import OccupancyField
 from helper_functions import TFHelper
 from rclpy.qos import qos_profile_sensor_data
 from angle_helpers import quaternion_from_euler
+import random
 
 class Particle(object):
     """ Represents a hypothesis (particle) of the robot's pose consisting of x,y and theta (yaw)
@@ -132,6 +133,7 @@ class ParticleFilter(Node):
             
             You do not need to modify this function, but it is helpful to understand it.
         """
+
         if self.scan_to_process is None:
             return
         msg = self.scan_to_process
@@ -246,10 +248,30 @@ class ParticleFilter(Node):
         if xy_theta is None:
             xy_theta = self.transform_helper.convert_pose_to_xy_and_theta(self.odom_pose)
         self.particle_cloud = []
-        # TODO create particles
+
+        rand_radius = 5; # meters
+
+        print('arrived')
+
+        lowerX = xy_theta[0] - rand_radius
+        upperX = xy_theta[0] + rand_radius
+        lowerY = xy_theta[1] - rand_radius
+        upperY = xy_theta[1] + rand_radius
+
+        for _ in range(0,self.n_particles):
+
+            x = random.uniform(lowerX, upperX)
+            y = random.uniform(lowerY, upperY)
+            theta = random.uniform(0, 2*math.pi)
+            w = 1.0
+            p = Particle(x, y, theta, w)
+
+            self.particle_cloud.append(p)
 
         self.normalize_particles()
         self.update_robot_pose()
+
+        print('particles created')
 
     def normalize_particles(self):
         """ Make sure the particle weights define a valid distribution (i.e. sum to 1.0) """
