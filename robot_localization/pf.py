@@ -256,12 +256,11 @@ class ParticleFilter(Node):
                 new_odom_xy_theta[2] - self.current_odom_xy_theta[2],
             )
 
-            print(delta)
-
             self.current_odom_xy_theta = new_odom_xy_theta
         else:
             self.current_odom_xy_theta = new_odom_xy_theta
             return
+        
         # TODO: modify particles using delta
         for p in self.particle_cloud:
             (x, y, theta) = p.get_position()
@@ -320,10 +319,7 @@ class ParticleFilter(Node):
             )
         self.particle_cloud = []
 
-        rand_radius = 5
-        # meters
-
-        print("arrived")
+        rand_radius = 3 # meters
 
         lowerX = xy_theta[0] - rand_radius
         upperX = xy_theta[0] + rand_radius
@@ -331,18 +327,29 @@ class ParticleFilter(Node):
         upperY = xy_theta[1] + rand_radius
 
         for _ in range(0, self.n_particles):
-            x = random.uniform(lowerX, upperX)
-            y = random.uniform(lowerY, upperY)
+            
+            inside = np.float('nan')
+
+            x = 0.0
+            y = 0.0
+
+            while math.isnan(inside):
+
+                x = random.uniform(lowerX, upperX)
+                y = random.uniform(lowerY, upperY)
+
+                print(f"random: {x}, {y}")
+                inside = self.occupancy_field.get_closest_obstacle_distance(x, y)
+
             theta = random.uniform(0, 2 * math.pi)
             w = 1.0
             p = Particle(x, y, theta, w)
 
+            print(f"particle: {x}, {y}")
             self.particle_cloud.append(p)
 
         self.normalize_particles()
         self.update_robot_pose()
-
-        print("particles created")
 
     def normalize_particles(self):
         """Make sure the particle weights define a valid distribution (i.e. sum to 1.0)"""
