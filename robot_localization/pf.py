@@ -265,26 +265,34 @@ class ParticleFilter(Node):
         else:
             self.current_odom_xy_theta = new_odom_xy_theta
             return
-        
+
         # TODO: modify particles using delta
+        displacement = math.sqrt((delta[0] * delta[0]) + (delta[1] * delta[1]))
+
+        if delta[1] < 0 and delta[0] < 0:
+            odom_ang = math.atan(delta[1] / delta[0]) - math.pi
+        elif delta[0] < 0:
+            odom_ang = math.pi - math.atan(delta[1] / delta[0])
+        else:
+            odom_ang = math.atan(delta[1] / delta[0])
+
+        move_angle = self.transform_helper.angle_diff(odom_ang, old_odom_xy_theta[2])
+
         for p in self.particle_cloud:
             (x, y, theta) = p.get_position()
-            displacement = math.sqrt((delta[0] * delta[0]) + (delta[1] * delta[1]))
-            # if delta[1] >= 0:
-            #     move_angle = self.transform_helper.angle_normalize(
-            #         theta + math.atan(delta[1] / delta[0]) + old_odom_xy_theta[2]
-            #     )
-            # else:
-            #     move_angle = self.transform_helper.angle_normalize(
-            #         old_odom_xy_theta[2] - theta - math.atan(delta[1] / delta[0])
-            #     )
-            move_angle = theta + self.transform_helper.angle_diff(
-                math.atan(delta[1] / delta[0]), old_odom_xy_theta[2]
-            )
+
             p.set_position(
-                math.cos(move_angle) * displacement + x,
-                math.sin(move_angle) * displacement + y,
+                x
+                + displacement
+                * math.cos(self.transform_helper.angle_normalize(move_angle + theta)),
+                y
+                + displacement
+                * math.sin(self.transform_helper.angle_normalize(move_angle + theta)),
                 theta + delta[2],
+            )
+
+            print(
+                f"odom_ang={odom_ang}, ang={self.transform_helper.angle_normalize(move_angle + theta)}"
             )
 
     def resample_particles(self):
@@ -316,10 +324,14 @@ class ParticleFilter(Node):
             x = part_x + r * np.cos(part_theta + theta)
             y = part_y + r * np.sin(part_theta + theta)
             gco = self.occupancy_field.get_closest_obstacle_distance(x, y)
-            cleaned_gco = gco[np.logical_not(np.isnan(gco))]
-            error = sum(cleaned_gco) / len(cleaned_gco)
+            # cleaned_gco = gco[np.logical_not(np.isnan(gco))]
+            cleaned_gco = gco[~np.isnan(gco)]
 
-            p.set_weight(1/error)
+            try:
+                error = sum(cleaned_gco) / len(cleaned_gco)
+                p.set_weight(1 / error)
+            except:
+                p.set_weight(0)
 
         #     x.append(part_x)
         #     y.append(part_y)
@@ -347,7 +359,7 @@ class ParticleFilter(Node):
             )
         self.particle_cloud = []
 
-        rand_radius = 3 # meters
+        rand_radius = 3  # meters
 
         lowerX = xy_theta[0] - rand_radius
         upperX = xy_theta[0] + rand_radius
@@ -355,14 +367,12 @@ class ParticleFilter(Node):
         upperY = xy_theta[1] + rand_radius
 
         for _ in range(0, self.n_particles):
-            
-            inside = float('nan')
+            inside = float("nan")
 
             x = 0.0
             y = 0.0
 
             while math.isnan(inside):
-
                 x = random.uniform(lowerX, upperX)
                 y = random.uniform(lowerY, upperY)
 
