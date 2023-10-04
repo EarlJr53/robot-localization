@@ -271,7 +271,7 @@ class ParticleFilter(Node):
         if delta[1] < 0 and delta[0] < 0:
             odom_ang = math.atan(delta[1] / delta[0]) - math.pi
         elif delta[0] < 0:
-            odom_ang = math.pi - math.atan(delta[1] / delta[0])
+            odom_ang = math.pi + math.atan(delta[1] / delta[0])
         else:
             odom_ang = math.atan(delta[1] / delta[0])
 
@@ -280,10 +280,10 @@ class ParticleFilter(Node):
         for p in self.particle_cloud:
             (x, y, theta) = p.get_position()
 
-            rand_radius = 0.5
+            rand_radius = 0.2
             x_noise = random.uniform(-rand_radius, rand_radius)
             y_noise = random.uniform(-rand_radius, rand_radius)
-            theta_noise = random.uniform(-math.pi / 36, math.pi / 36)
+            theta_noise = random.uniform(-math.pi / 60, math.pi / 60)
 
             p.set_position(
                 x
@@ -402,7 +402,6 @@ class ParticleFilter(Node):
 
     def normalize_particles(self):
         """Make sure the particle weights define a valid distribution (i.e. sum to 1.0)"""
-        # TODO: implement this
         sum_weights = 0
         for p in self.particle_cloud:
             sum_weights += p.get_weight()
