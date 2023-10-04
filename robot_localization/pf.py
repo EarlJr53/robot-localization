@@ -266,7 +266,6 @@ class ParticleFilter(Node):
             self.current_odom_xy_theta = new_odom_xy_theta
             return
 
-        # TODO: modify particles using delta
         displacement = math.sqrt((delta[0] * delta[0]) + (delta[1] * delta[1]))
 
         if delta[1] < 0 and delta[0] < 0:
@@ -281,18 +280,29 @@ class ParticleFilter(Node):
         for p in self.particle_cloud:
             (x, y, theta) = p.get_position()
 
+            rand_radius = 0.5
+            x_noise = random.uniform(-rand_radius, rand_radius)
+            y_noise = random.uniform(-rand_radius, rand_radius)
+            theta_noise = random.uniform(-math.pi / 36, math.pi / 36)
+
             p.set_position(
                 x
-                + displacement
-                * math.cos(self.transform_helper.angle_normalize(move_angle + theta)),
+                + x_noise
+                + (
+                    displacement
+                    * math.cos(
+                        self.transform_helper.angle_normalize(move_angle + theta)
+                    )
+                ),
                 y
-                + displacement
-                * math.sin(self.transform_helper.angle_normalize(move_angle + theta)),
-                theta + delta[2],
-            )
-
-            print(
-                f"odom_ang={odom_ang}, ang={self.transform_helper.angle_normalize(move_angle + theta)}"
+                + y_noise
+                + (
+                    displacement
+                    * math.sin(
+                        self.transform_helper.angle_normalize(move_angle + theta)
+                    )
+                ),
+                self.transform_helper.angle_normalize(theta + theta_noise + delta[2]),
             )
 
     def resample_particles(self):
@@ -305,7 +315,9 @@ class ParticleFilter(Node):
         self.normalize_particles()
 
         weights = [p.get_weight() for p in self.particle_cloud]
-        self.particle_cloud = draw_random_sample(self.particle_cloud, weights, self.n_particles)
+        self.particle_cloud = draw_random_sample(
+            self.particle_cloud, weights, self.n_particles
+        )
 
     def update_particles_with_laser(self, r, theta):
         """Updates the particle weights in response to the scan data
@@ -326,7 +338,6 @@ class ParticleFilter(Node):
             x = part_x + r * np.cos(part_theta + theta)
             y = part_y + r * np.sin(part_theta + theta)
             gco = self.occupancy_field.get_closest_obstacle_distance(x, y)
-            # cleaned_gco = gco[np.logical_not(np.isnan(gco))]
             cleaned_gco = gco[~np.isnan(gco)]
 
             try:
