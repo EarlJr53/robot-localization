@@ -20,6 +20,7 @@ from helper_functions import TFHelper
 from rclpy.qos import qos_profile_sensor_data
 from angle_helpers import quaternion_from_euler
 import random
+from matplotlib import pyplot as plt
 
 
 class Particle(object):
@@ -183,7 +184,7 @@ class ParticleFilter(Node):
         (r, theta) = self.transform_helper.convert_scan_to_polar_in_robot_frame(
             msg, self.base_frame
         )
-        print("r[0]={0}, theta[0]={1}".format(r[0], theta[0]))
+        # print("r[0]={0}, theta[0]={1}".format(r[0], theta[0]))
         # clear the current scan so that we can process the next one
         self.scan_to_process = None
 
@@ -191,7 +192,7 @@ class ParticleFilter(Node):
         new_odom_xy_theta = self.transform_helper.convert_pose_to_xy_and_theta(
             self.odom_pose
         )
-        print("x: {0}, y: {1}, yaw: {2}".format(*new_odom_xy_theta))
+        # print("x: {0}, y: {1}, yaw: {2}".format(*new_odom_xy_theta))
 
         if not self.current_odom_xy_theta:
             self.current_odom_xy_theta = new_odom_xy_theta
@@ -295,10 +296,33 @@ class ParticleFilter(Node):
     def update_particles_with_laser(self, r, theta):
         """Updates the particle weights in response to the scan data
         r: the distance readings to obstacles
-        theta: the angle relative to the robot frame for each corresponding reading
+        theta: the angle relative to the robot frame for each corresponding reading (radians)
         """
-        # TODO: implement this
-        pass
+
+        # x = []
+        # y = []
+        # w = []
+
+        for p in self.particle_cloud:
+            position = p.get_position()
+            part_x = position[0]
+            part_y = position[1]
+            part_theta = position[2]
+
+            x = part_x + r * np.cos(part_theta + theta)
+            y = part_y + r * np.sin(part_theta + theta)
+            gco = self.occupancy_field.get_closest_obstacle_distance(x, y)
+            cleaned_gco = gco[np.logical_not(np.isnan(gco))]
+            error = sum(cleaned_gco) / len(cleaned_gco)
+
+            p.set_weight(1/error)
+
+        #     x.append(part_x)
+        #     y.append(part_y)
+        #     w.append(p.get_weight() * 10)
+
+        # plt.scatter(x, y, w)
+        # plt.show()
 
     def update_initial_pose(self, msg):
         """Callback function to handle re-initializing the particle filter based on a pose estimate.
@@ -328,7 +352,7 @@ class ParticleFilter(Node):
 
         for _ in range(0, self.n_particles):
             
-            inside = np.float('nan')
+            inside = float('nan')
 
             x = 0.0
             y = 0.0
@@ -338,14 +362,12 @@ class ParticleFilter(Node):
                 x = random.uniform(lowerX, upperX)
                 y = random.uniform(lowerY, upperY)
 
-                print(f"random: {x}, {y}")
                 inside = self.occupancy_field.get_closest_obstacle_distance(x, y)
 
             theta = random.uniform(0, 2 * math.pi)
             w = 1.0
             p = Particle(x, y, theta, w)
 
-            print(f"particle: {x}, {y}")
             self.particle_cloud.append(p)
 
         self.normalize_particles()
