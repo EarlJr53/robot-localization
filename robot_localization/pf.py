@@ -227,7 +227,6 @@ class ParticleFilter(Node):
         # first make sure that the particle weights are normalized
         self.normalize_particles()
 
-        # TODO: assign the latest pose into self.robot_pose as a geometry_msgs.Pose object
         p_best = self.particle_cloud[0]
         for p in self.particle_cloud:
             if p.get_weight() > p_best.get_weight():
