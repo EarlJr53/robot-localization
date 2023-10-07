@@ -21,6 +21,14 @@ A challenge with tracking a robot’s position is the unreliability of odometry 
 
 <!-- High level, then implementation? -->
 
+At a high level, we initialized particles around where we thought the robot was. When the robot moved, we used the odometry measurements to move all the particles accordingly. However, the goal is to more reliably figure out where the robot is, since odometry measurements are not always correct. Thus, we compared the laser scan data the robot was reading to the "laser scan" that each particle would see if the robot were there. By comparing these, we could narrow down the positions that the robot was likely to be at.
+
+*Initialization:* Currently, our implementation relies on an estimated starting position. Based on that, we randomly create a particle cloud with 300 particles in a box that extends 5 meters on each side of the robot. Particle is a simiple class defined to hold x, y, theta, and weight information. To start, all of the particles have the same weight, all of which are normalized to 1.
+
+*Odometry updates:* Once the robot has moved or turned sufficiently, we want to update all of our particles. Essentially, we want to see where they would all end up if they had been in the robot's position to start. Durng this process, we had to be mindful of which frame we were in, because the robot's odometry data is in the odom frame which the particles are in the global frame. In addition, there isn't a set direction they need to move or turn, because all the movements are relative to the heading of the particles. By using some trignometry to figure out the relative angles between the odometry frame's axes, the robot's movement angle, the robot's heading, and the heading of the particle with respect to the global frame, we were able to update these. 
+
+
+
 ## Process (Brooke)
 
 <!-- 
