@@ -325,9 +325,11 @@ class ParticleFilter(Node):
         theta: the angle relative to the robot frame for each corresponding reading (radians)
         """
 
-        # x = []
-        # y = []
-        # w = []
+        indices = np.argwhere(r == 0)
+        r = np.delete(r, indices)
+        theta = np.delete(theta, indices)
+
+        print(theta)
 
         for p in self.particle_cloud:
             position = p.get_position()
@@ -344,14 +346,7 @@ class ParticleFilter(Node):
                 error = sum(cleaned_gco) / len(cleaned_gco)
                 p.set_weight(1 / error)
             except:
-                p.set_weight(0)
-
-        #     x.append(part_x)
-        #     y.append(part_y)
-        #     w.append(p.get_weight() * 10)
-
-        # plt.scatter(x, y, w)
-        # plt.show()
+                p.set_weight(0.0001)
 
     def update_initial_pose(self, msg):
         """Callback function to handle re-initializing the particle filter based on a pose estimate.
@@ -407,7 +402,10 @@ class ParticleFilter(Node):
             sum_weights += p.get_weight()
 
         for p in self.particle_cloud:
-            p.set_weight(p.get_weight() / sum_weights)
+            try:
+                p.set_weight(p.get_weight() / sum_weights)
+            except:
+                p.set_weight(0.0001)
 
     def publish_particles(self, timestamp):
         msg = ParticleCloud()
