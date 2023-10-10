@@ -27,7 +27,8 @@ At a high level, we initialized particles around where we thought the robot was.
 
 *Laser Scan Comparison:* To figure out how probable it was that the robot was at a given particle's position, we calculated an error value to assign to each particle. To do this, we took the laser data that the robot was reading at its current position. For each particle, we mapped the laser data to its position and orientation, so we essentially put the room where it would be if the robot were in the particle's position. We then used a function that gave us the distance bewteen each point of the constructed "laser scan" and the closest actual object in the map. That essentially gave us the "error" for each angle of the laser scan for a given particle, because it tells us how far walls and other obstacles are from reality. We averaged those and inverted them to give each particle a weight.
 
-<!-- ! Insert diagram here -->
+![diagram of particle update with laser scan](/images/laser_scan_diagram.png)
+The above diagram shows what the robot reads (left) and what the calculation of error, based on that scan, would look like for two different particles, p and q.
 
 *Set Robot Pose*: We decided to guess that the robot was at the pose of the single particle with the highest weight. We opted to use this modal method rather than an average position, because we were worried that in instances with two or more clusters of probable positions, the robot would end up somewhere in the middle, in a highly improbable location. While there is some risk of one heavily weighted particle throwing off the estimate, we assumed that the chance of that happening for a period of several iterations was less likely than the former possibility.
 
