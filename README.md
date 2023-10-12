@@ -3,7 +3,8 @@
 [Brooke Moss](https://github.com/EarlJr53) and [Isha Goyal](https://github.com/Isha-Goyal)
 [Olin College](https://www.olin.edu) - A Computational Introduction to Robotics - Fall 2023
 
-<!-- ! Add GIF here -->
+![demo of robot localization behaviour](/images/take-1-bag.gif)
+
 
 ## Introduction
 
