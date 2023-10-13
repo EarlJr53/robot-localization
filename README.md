@@ -35,7 +35,8 @@ One of the big design decisions in our project was the mechanism by which we upd
 
 However, the difficulty in this problem comes from the various reference frames. The position and orientation (and therefore delta) of the robot is in the odometry frame, so it is relative to the robot's starting point. However, the movements that we care about are relative to the *current* heading and location of the robot, not its starting position. Essentially, if the robot moves in the direction its facing, it is moving forward, no matter which direction that happens to be in the `odom` frame. Similarly, we needed to be able to translate that forward motion of the robot into forward motion of each particle (relative to the heading of each particle).
 
-<!-- ! Insert diagram here? -->
+![diagram showing odometry movements applied to particles](/images/update_odom.jpg)
+*The above diagram shows how we can calculate the delta and theta of the robot motion and then apply it to each particle.*
 
 One way we could have solved this problem was using matrices, but we decided to tackle it from a more trigonometric angle. We started by finding the hypotenuse of the *x* and *y* delta values we were given, effectively the overall displacement from the previous robot position to the current position.
 
