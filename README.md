@@ -4,7 +4,7 @@
 [Olin College](https://www.olin.edu) - A Computational Introduction to Robotics - Fall 2023
 
 ![demo of robot localization behaviour](/images/take-1-bag.gif)
-
+*A demo video of the robot localization behaviour.*
 
 ## Introduction
 
